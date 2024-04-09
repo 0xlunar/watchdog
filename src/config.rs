@@ -68,6 +68,9 @@ impl Config {
     pub fn recheck_delay(&self) -> usize {
         self.recheck_delay
     }
+    pub fn watch_files(&self) -> bool {
+        self.watch_files
+    }
 
     pub fn check_file_changes(directory: &Path, cache: Rc<Mutex<HashMap<OsString, u64>>>) -> bool {
         let paths = fs::read_dir(directory).unwrap();

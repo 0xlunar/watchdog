@@ -30,6 +30,7 @@ fn main() {
     let recheck_delay = config.recheck_delay() as u64;
     let restart_delay = config.restart_delay() as u64;
     let dir = config.directory().to_path_buf();
+    let watch_files = config.watch_files();
     println!("Starting Process");
 
     config.start();
@@ -37,25 +38,28 @@ fn main() {
     let config = Arc::new(Mutex::new(config));
     let e_config = Arc::clone(&config);
 
+
     let t_config = Arc::clone(&config);
     let file_thread = std::thread::spawn(move || {
-        let cache = Rc::new(Mutex::new(HashMap::new()));
-        loop {
-            {
-                let changes = Config::check_file_changes(dir.as_path(), Rc::clone(&cache));
-                if changes {
-                    println!("File changes detected!");
-                    let mut lock = t_config.lock().unwrap();
-                    if lock.stop() {
-                        if restart_delay > 0 {
-                            std::thread::sleep(Duration::from_millis(restart_delay));
+        if watch_files {
+            let cache = Rc::new(Mutex::new(HashMap::new()));
+            loop {
+                {
+                    let changes = Config::check_file_changes(dir.as_path(), Rc::clone(&cache));
+                    if changes {
+                        println!("File changes detected!");
+                        let mut lock = t_config.lock().unwrap();
+                        if lock.stop() {
+                            if restart_delay > 0 {
+                                std::thread::sleep(Duration::from_millis(restart_delay));
+                            }
+                            lock.start()
                         }
-                        lock.start()
                     }
                 }
-            }
-            if recheck_delay > 0 {
-                std::thread::sleep(Duration::from_millis(recheck_delay));
+                if recheck_delay > 0 {
+                    std::thread::sleep(Duration::from_millis(recheck_delay));
+                }
             }
         }
     });
