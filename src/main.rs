@@ -15,9 +15,9 @@ pub struct CommandLineArguments {
     pub watch_files: bool,
     #[arg(short = 'z', long = "onlyNonZeroExit", default_value_t = false, help = "Only exit on a non-zero status code")]
     pub only_non_zero_exit: bool,
-    #[arg(short = 'r', long = "restartDelay", default_value_t = 0, help = "Delay before restarting process in ms")]
+    #[arg(short = 'r', long = "restartDelay", default_value_t = 1000, help = "Delay before restarting process in ms")]
     pub restart_delay: usize,
-    #[arg(short = 'c', long = "recheckDelay", default_value_t = 0, help = "How often the process is checked in ms")]
+    #[arg(short = 'c', long = "recheckDelay", default_value_t = 500, help = "How often the process is checked in ms")]
     pub recheck_delay: usize,
     #[arg(long = "forceRestartDelay", default_value_t = 0, help = "Forces a restart after a delay in ms [0 = Disabled]")]
     pub force_restart_delay: usize,

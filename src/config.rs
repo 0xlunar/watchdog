@@ -2,18 +2,17 @@ use std::collections::HashMap;
 use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Child;
+// use std::process::Child;
 use std::rc::Rc;
 use std::sync::Mutex;
 use std::time::{Duration, UNIX_EPOCH};
 use crate::CommandLineArguments;
+use CreateProcessW::Command;
 
 pub struct Config {
     directory: PathBuf,
     file_name: OsString,
-    process: Option<Child>,
-    pid: Option<usize>,
-    exit_code: Option<isize>,
+    process: Option<CreateProcessW::Child>,
     watch_files: bool,
     only_non_zero_exit: bool,
     restart_delay: usize,
@@ -25,15 +24,23 @@ impl Config {
         let mut full_path = self.directory.clone();
         full_path.push(self.file_name.as_os_str());
 
-
+        println!("Fullpath: {:?}", full_path.as_os_str());
         if !full_path.try_exists().unwrap() {
             panic!("File doesn't exist")
         }
-        println!("Fullpath: {:?}", full_path.as_os_str());
 
         // TODO: Fix bug causing processess to not actually launch? and valid existing files not being found/runnable
-        let process = std::process::Command::new(full_path)
-            .spawn().expect("Cannot spawn process");
+        // let process = std::process::Command::new("start")
+        //     // .arg("/c")
+        //     // .arg("start")
+        //     .arg(&self.file_name)
+        //     .arg(full_path)
+        //     .spawn().expect("Cannot spawn process");
+
+        let process = Command::new(format!("cmd /c start {}", full_path.to_str().unwrap()))
+            .inherit_handles(true)
+            .current_dir(&self.directory)
+            .spawn().expect("Failed to spawn process");
 
         self.process = Some(process);
     }
@@ -131,7 +138,10 @@ impl Config {
 
 impl From<CommandLineArguments> for Config {
     fn from(item: CommandLineArguments) -> Self {
-        let mut directory = PathBuf::from(item.path);
+        let directory = PathBuf::from(item.path);
+        let mut directory = fs::canonicalize(directory);
+        println!("Dir: {:?}", directory);
+        let mut directory = directory.unwrap();
         let file_name = match directory.extension() {
             Some(_) => {
                 let stem = directory.file_name().unwrap().to_os_string();
@@ -145,8 +155,6 @@ impl From<CommandLineArguments> for Config {
             directory,
             file_name,
             process: None,
-            pid: None,
-            exit_code: None,
             watch_files: item.watch_files,
             only_non_zero_exit: item.only_non_zero_exit,
             restart_delay: item.restart_delay,
