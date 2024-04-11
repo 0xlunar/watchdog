@@ -128,9 +128,7 @@ impl Config {
 impl From<CommandLineArguments> for Config {
     fn from(item: CommandLineArguments) -> Self {
         let directory = PathBuf::from(item.path);
-        let mut directory = fs::canonicalize(directory);
-        println!("Dir: {:?}", directory);
-        let mut directory = directory.unwrap();
+        let mut directory = fs::canonicalize(directory).unwrap();
         let file_name = match directory.extension() {
             Some(_) => {
                 let stem = directory.file_name().unwrap().to_os_string();
