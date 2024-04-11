@@ -26,6 +26,7 @@ pub struct CommandLineArguments {
 
 fn main() {
     let args = CommandLineArguments::parse();
+    let force_restart = args.force_restart_delay as u64;
     let mut config: Config = args.into();
     let recheck_delay = config.recheck_delay() as u64;
     let restart_delay = config.restart_delay() as u64;
@@ -74,8 +75,24 @@ fn main() {
         }
     });
 
+    let t_config = Arc::clone(&e_config);
+    let force_restart_task = std::thread::spawn(move || {
+       if force_restart > 0 {
+           loop {
+               println!("Application will restart in: {} seconds", force_restart / 1000);
+               std::thread::sleep(Duration::from_millis(force_restart)); // wait time period
+               println!("Force restarting application");
+               let mut lock = t_config.lock().unwrap();
+               if lock.stop() {
+                   lock.start();
+               }
+           }
+       }
+    });
+
     let _ = file_thread.join();
     let _ = aliveness_task.join();
+    let _ = force_restart_task.join();
 
     e_config.lock().unwrap().stop();
 }

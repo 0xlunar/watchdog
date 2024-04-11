@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::ffi::OsString;
-use std::fs;
+use std::{fs, process};
 use std::path::{Path, PathBuf};
 use std::process::Child;
 use std::rc::Rc;
@@ -112,6 +112,8 @@ impl Config {
                                 std::thread::sleep(Duration::from_millis(self.restart_delay as u64));
                             }
                             self.start()
+                        } else {
+                           process::exit(0);
                         }
                     },
                     None => ()
