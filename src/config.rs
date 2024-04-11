@@ -10,10 +10,8 @@ pub struct Config {
     directory: PathBuf,
     file_name: OsString,
     process: Option<Child>,
-    watch_files: bool,
     only_non_zero_exit: bool,
-    restart_delay: usize,
-    recheck_delay: usize,
+    restart_delay: u64,
 }
 
 impl Config {
@@ -25,7 +23,7 @@ impl Config {
             panic!("File doesn't exist")
         }
 
-        let process = std::process::Command::new(full_path)
+        let process = process::Command::new(full_path)
             .current_dir(&self.directory)
             .spawn().expect("Cannot spawn process");
 
@@ -55,15 +53,6 @@ impl Config {
 
     pub fn directory(&self) -> &Path {
         self.directory.as_path()
-    }
-    pub fn restart_delay(&self) -> usize {
-        self.restart_delay
-    }
-    pub fn recheck_delay(&self) -> usize {
-        self.recheck_delay
-    }
-    pub fn watch_files(&self) -> bool {
-        self.watch_files
     }
 
     pub fn check_file_changes(directory: &Path, cache: &mut HashMap<OsString, u64>) -> bool {
@@ -101,12 +90,12 @@ impl Config {
                         println!("Process Exited: {:?}", es);
                         if es.success() && !self.only_non_zero_exit {
                             if self.restart_delay > 0 {
-                                std::thread::sleep(Duration::from_millis(self.restart_delay as u64));
+                                std::thread::sleep(Duration::from_millis(self.restart_delay));
                             }
                             self.start()
                         } else if !es.success() {
                             if self.restart_delay > 0 {
-                                std::thread::sleep(Duration::from_millis(self.restart_delay as u64));
+                                std::thread::sleep(Duration::from_millis(self.restart_delay));
                             }
                             self.start()
                         } else {
@@ -141,10 +130,8 @@ impl From<CommandLineArguments> for Config {
             directory,
             file_name,
             process: None,
-            watch_files: item.watch_files,
             only_non_zero_exit: item.only_non_zero_exit,
             restart_delay: item.restart_delay,
-            recheck_delay: item.recheck_delay,
         }
     }
 }

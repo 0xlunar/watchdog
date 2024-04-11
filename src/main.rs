@@ -15,22 +15,22 @@ pub struct CommandLineArguments {
     #[arg(short = 'z', long = "onlyNonZeroExit", default_value_t = false, help = "Only exit on a non-zero status code")]
     pub only_non_zero_exit: bool,
     #[arg(short = 'r', long = "restartDelay", default_value_t = 1000, help = "Delay before restarting process in ms")]
-    pub restart_delay: usize,
+    pub restart_delay: u64,
     #[arg(short = 'c', long = "recheckDelay", default_value_t = 500, help = "How often the process is checked in ms")]
-    pub recheck_delay: usize,
+    pub recheck_delay: u64,
     #[arg(long = "forceRestartDelay", default_value_t = 0, help = "Forces a restart after a delay in ms [0 = Disabled]")]
-    pub force_restart_delay: usize,
+    pub force_restart_delay: u64,
 }
 
 
 fn main() {
     let args = CommandLineArguments::parse();
-    let force_restart = args.force_restart_delay as u64;
+    let force_restart = args.force_restart_delay;
+    let recheck_delay = args.recheck_delay;
+    let restart_delay = args.restart_delay;
+    let watch_files = args.watch_files;
     let mut config: Config = args.into();
-    let recheck_delay = config.recheck_delay() as u64;
-    let restart_delay = config.restart_delay() as u64;
     let dir = config.directory().to_path_buf();
-    let watch_files = config.watch_files();
     println!("Starting Process");
 
     config.start();
@@ -78,7 +78,7 @@ fn main() {
     let force_restart_task = std::thread::spawn(move || {
        if force_restart > 0 {
            loop {
-               println!("Application will restart in: {} seconds", force_restart / 1000);
+               println!("Application will restart in: {} seconds", force_restart as f64 / 1000.00);
                std::thread::sleep(Duration::from_millis(force_restart)); // wait time period
                println!("Force restarting application");
                let mut lock = t_config.lock().unwrap();
