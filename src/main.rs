@@ -1,7 +1,6 @@
 mod config;
 
 use std::collections::HashMap;
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use clap::Parser;
@@ -43,10 +42,10 @@ fn main() {
     let t_config = Arc::clone(&config);
     let file_thread = std::thread::spawn(move || {
         if watch_files {
-            let cache = Rc::new(Mutex::new(HashMap::new()));
+            let mut cache = HashMap::new();
             loop {
                 {
-                    let changes = Config::check_file_changes(dir.as_path(), Rc::clone(&cache));
+                    let changes = Config::check_file_changes(dir.as_path(), &mut cache);
                     if changes {
                         println!("File changes detected!");
                         let mut lock = t_config.lock().unwrap();

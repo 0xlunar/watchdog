@@ -3,8 +3,6 @@ use std::ffi::OsString;
 use std::{fs, process};
 use std::path::{Path, PathBuf};
 use std::process::Child;
-use std::rc::Rc;
-use std::sync::Mutex;
 use std::time::{Duration, UNIX_EPOCH};
 use crate::CommandLineArguments;
 
@@ -68,10 +66,9 @@ impl Config {
         self.watch_files
     }
 
-    pub fn check_file_changes(directory: &Path, cache: Rc<Mutex<HashMap<OsString, u64>>>) -> bool {
+    pub fn check_file_changes(directory: &Path, cache: &mut HashMap<OsString, u64>) -> bool {
         let paths = fs::read_dir(directory).unwrap();
         let mut file_updated = false;
-        let mut cache_lock = cache.lock().unwrap();
         for path in paths {
             let path = path.unwrap();
             let file_name = path.file_name();
@@ -82,7 +79,7 @@ impl Config {
                 Err(_) => metadata.len()
             };
 
-            cache_lock.entry(file_name).and_modify(|v| {
+            cache.entry(file_name).and_modify(|v| {
                 if *v != value {
                     file_updated = true;
                     *v = value;
