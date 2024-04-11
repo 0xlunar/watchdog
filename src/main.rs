@@ -38,7 +38,6 @@ fn main() {
     let config = Arc::new(Mutex::new(config));
     let e_config = Arc::clone(&config);
 
-
     let t_config = Arc::clone(&config);
     let file_thread = std::thread::spawn(move || {
         if watch_files {
