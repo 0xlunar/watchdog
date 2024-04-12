@@ -36,7 +36,6 @@ fn main() {
     config.start();
 
     let config = Arc::new(Mutex::new(config));
-    let e_config = Arc::clone(&config);
 
     let t_config = Arc::clone(&config);
     let file_thread = std::thread::spawn(move || {
@@ -63,7 +62,7 @@ fn main() {
         }
     });
 
-    let t_config = Arc::clone(&e_config);
+    let t_config = Arc::clone(&config);
     let aliveness_task = std::thread::spawn(move || {
         loop {
             {
@@ -73,7 +72,7 @@ fn main() {
         }
     });
 
-    let t_config = Arc::clone(&e_config);
+    let t_config = Arc::clone(&config);
     let force_restart_task = std::thread::spawn(move || {
        if force_restart > 0 {
            loop {
@@ -92,5 +91,5 @@ fn main() {
     let _ = aliveness_task.join();
     let _ = force_restart_task.join();
 
-    e_config.lock().unwrap().stop();
+    config.lock().unwrap().stop();
 }
