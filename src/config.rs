@@ -51,8 +51,8 @@ impl Config {
         success
     }
 
-    pub fn directory(&self) -> &Path {
-        self.directory.as_path()
+    pub fn directory(&self) -> PathBuf {
+        self.directory.clone()
     }
 
     pub fn check_file_changes(directory: &Path, cache: &mut HashMap<OsString, u64>) -> bool {

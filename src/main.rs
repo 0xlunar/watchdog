@@ -30,7 +30,7 @@ fn main() {
     let restart_delay = args.restart_delay;
     let watch_files = args.watch_files;
     let mut config: Config = args.into();
-    let dir = config.directory().to_path_buf();
+    let dir = config.directory();
     println!("Starting Process");
 
     config.start();
@@ -39,11 +39,12 @@ fn main() {
 
     let t_config = Arc::clone(&config);
     let file_thread = std::thread::spawn(move || {
+        let dir_path = dir.as_path();
         if watch_files {
             let mut cache = HashMap::new();
             loop {
                 {
-                    let changes = Config::check_file_changes(dir.as_path(), &mut cache);
+                    let changes = Config::check_file_changes(dir_path, &mut cache);
                     if changes {
                         println!("File changes detected!");
                         let mut lock = t_config.lock().unwrap();
